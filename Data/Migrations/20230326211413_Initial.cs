@@ -13,7 +13,8 @@ namespace TodoApi.Data.Migrations
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
-                    IsComplete = table.Column<bool>(type: "INTEGER", nullable: false)
+                    IsComplete = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Secret = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

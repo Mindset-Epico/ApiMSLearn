@@ -8,7 +8,7 @@ using TodoApi.Models;
 namespace TodoApi.Data.Migrations
 {
     [DbContext(typeof(TodoContext))]
-    [Migration("20230324162522_Initial")]
+    [Migration("20230326211413_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,6 +27,9 @@ namespace TodoApi.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Secret")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

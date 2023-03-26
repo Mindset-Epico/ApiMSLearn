@@ -22,127 +22,119 @@ namespace TodoApi.Controllers
             _context = context;
         }
 
+        //MÉTODOS
         private bool TodoItemExists(long id)
-    {
-        return _context.TodoItems.Any(e => e.Id == id);
-    }
-
-        [HttpGet]
-        public IEnumerable<TodoItem> GetTodoItem()
         {
-            return _context.TodoItems;
+            return _context.TodoItems.Any(e => e.Id == id);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TodoItem>> GetTodoItemById(long id)
+
+        private static TodoItemDTO ItemToDTO(TodoItem todoItem) =>
+            new TodoItemDTO
         {
-            var todoItem = await _context.TodoItems.FindAsync(id);
+            Id = todoItem.Id,
+            Name = todoItem.Name,
+            IsComplete = todoItem.IsComplete
+        };
 
-            if (todoItem == null)
-            {
-                return NotFound();
-            }
 
-            return todoItem;
-        }
-
-        // [HttpGet("{id}")]
-        // public TodoItem GetTodoItemById(int id)
-        // {
-        //     return _context.TodoItems.FirstOrDefault(
-        //         item => item.Id == id
-        //     );
-        // }
-
-        [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
-        {
-            _context.TodoItems.Add(todoItem);
-            await _context.SaveChangesAsync();
-
-            //    return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
-            return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, todoItem);
-        }
-
-[HttpPut("{id}")]
-public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
-{
-    if (id != todoItem.Id)
+     // GET: api/TodoItems
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetTodoItems()
     {
-        return BadRequest();
+        return await _context.TodoItems
+            .Select(x => ItemToDTO(x))
+            .ToListAsync();
     }
 
-    _context.Entry(todoItem).State = EntityState.Modified;
+    // GET: api/TodoItems/id
+    [HttpGet("{id}")]
+    public async Task<ActionResult<TodoItemDTO>> GetTodoItem(long id)
+    {
+        var todoItem = await _context.TodoItems.FindAsync(id);
 
-    try
-    {
-        await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateConcurrencyException)
-    {
-        if (!TodoItemExists(id))
+        if (todoItem == null)
         {
             return NotFound();
         }
-        else
-        {
-            throw;
-        }
+
+        return ItemToDTO(todoItem);
     }
 
-    return NoContent();
-}
 
-[HttpDelete("{id}")]
-public async Task<IActionResult> DeleteTodoItem(long id)
-{
-    var todoItem = await _context.TodoItems.FindAsync(id);
-    if (todoItem == null)
+    // // GET: api/TodoItems/searchterm
+    // [HttpGet("{searchTerm}")]
+    // public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetTodoItemsByTerm(string searchTerm)
+    // {
+    //     return await _context.TodoItems.Include();
+    // }
+
+
+    // PUT: api/TodoItems/id
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutTodoItem(long id, TodoItemDTO todoDTO)
     {
-        return NotFound();
+        if (id != todoDTO.Id)
+        {
+            return BadRequest();
+        }
+
+        var todoItem = await _context.TodoItems.FindAsync(id);
+        if (todoItem == null)
+        {
+            return NotFound();
+        }
+
+        todoItem.Name = todoDTO.Name;
+        todoItem.IsComplete = todoDTO.IsComplete;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException) when (!TodoItemExists(id))
+        {
+            return NotFound();
+        }
+
+        return NoContent();
     }
 
-    _context.TodoItems.Remove(todoItem);
-    await _context.SaveChangesAsync();
 
-    return NoContent();
-}
+    // POST: api/TodoItems
+    [HttpPost]
+    public async Task<ActionResult<TodoItemDTO>> PostTodoItem(TodoItemDTO todoDTO)
+    {
+        var todoItem = new TodoItem
+        {
+            IsComplete = todoDTO.IsComplete,
+            Name = todoDTO.Name
+        };
 
+        _context.TodoItems.Add(todoItem);
+        await _context.SaveChangesAsync();
 
+        return CreatedAtAction(
+            nameof(GetTodoItem),
+            new { id = todoItem.Id },
+            ItemToDTO(todoItem));
+    }
 
-        // [HttpPut("{id}")]
-        //         public async Task<IActionResult> Put(int id, Evento model)
-        //         {
-        //             try
-        //             {
-        //                 var evento = await _eventoService.UpdateEvento(id, model);
-        //                 if (evento == null) return BadRequest("Erro ao tentar adicionar evento.");
+    // DELETE: api/TodoItems/id
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTodoItem(long id)
+    {
+        var todoItem = await _context.TodoItems.FindAsync(id);
+        if (todoItem == null)
+        {
+            return NotFound();
+        }
 
-        //                 return Ok(evento);
-        //             }
-        //             catch (Exception ex)
-        //             {
-        //                 return this.StatusCode(StatusCodes.Status500InternalServerError,
-        //                     $"Erro ao tentar atualizar eventos. Erro: {ex.Message}");
-        //             }
-        //         }
+        _context.TodoItems.Remove(todoItem);
+        await _context.SaveChangesAsync();
 
-        //         [HttpDelete("{id}")]
-        //         public async Task<IActionResult> Delete(int id)
-        //         {
-        //             try
-        //             {
-        //                 return await _eventoService.DeleteEvento(id) ? 
-        //                        Ok("Deletado") : 
-        //                        BadRequest("Evento não deletado");
-        //             }
-        //             catch (Exception ex)
-        //             {
-        //                 return this.StatusCode(StatusCodes.Status500InternalServerError,
-        //                     $"Erro ao tentar deletar eventos. Erro: {ex.Message}");
-        //             }
-        //         }
-
+        return NoContent();
+    }
 
     }
 }
